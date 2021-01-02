@@ -68,9 +68,10 @@ void pglSwapBuffers()
 	
 	if(pglState->display == GFX_TOP)
 	{
+		int size = gfxIsWide() ? GX_BUFFER_DIM(240, 800) : GX_BUFFER_DIM(240, 400);
 		GX_DisplayTransfer(
-			(u32*)pglState->colorBuffer, GX_BUFFER_DIM(240, 400),
-			output_framebuffer, GX_BUFFER_DIM(240, 400),
+			(u32*)pglState->colorBuffer, size,
+			output_framebuffer, size,
 			GX_TRANSFER_OUT_FORMAT(output_format));
 	}
 	else

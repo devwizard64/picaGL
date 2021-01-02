@@ -14,8 +14,9 @@ void _stateInitialize()
 
 	pglState->geometryBufferCurrent = 0;
 
-	pglState->colorBuffer = vramAlloc(400 * 240 * 4); // 32-bit (RGBA8)
-	pglState->depthBuffer = vramAlloc(400 * 240 * 4); // 24-bit depth + 8-bit stencil
+	int size = gfxIsWide() ? 800 * 240 * 4 : 400 * 240 * 4;
+	pglState->colorBuffer = vramAlloc(size); // 32-bit (RGBA8)
+	pglState->depthBuffer = vramAlloc(size); // 24-bit depth + 8-bit stencil
 
 	pglState->commandBuffer[0] = linearAlloc(COMMAND_BUFFER_SIZE);
 	pglState->commandBuffer[1] = linearAlloc(COMMAND_BUFFER_SIZE);
