@@ -2,7 +2,9 @@
 
 #include <stdio.h>
 
+/*
 #include "texture_conv.inc"
+*/
 
 static inline bool _addressIsVRAM(const void* addr)
 {
@@ -34,7 +36,7 @@ static size_t _determineBPP(GPU_TEXCOLOR format)
 static GPU_TEXCOLOR _determineHardwareFormat(GLenum format)
 {
 	switch(format)
-	{	
+	{
 		case 4:
 		case GL_RGBA8: //return GPU_RGBA8;
 		case GL_RGBA:
@@ -51,7 +53,6 @@ static GPU_TEXCOLOR _determineHardwareFormat(GLenum format)
 		default: return GPU_RGBA4;
 	}
 }
-*/
 
 static inline readFunc _determineReadFunction(GLenum format, GLenum type, uint8_t *bpp)
 {
@@ -92,6 +93,7 @@ static inline writeFunc _determineWriteFunction(GPU_TEXCOLOR format)
 		default:         return NULL;
 	}
 }
+*/
 
 static inline uint32_t _picaConvertWrap(uint32_t param)
 {
@@ -108,10 +110,10 @@ static inline uint32_t _picaConvertWrap(uint32_t param)
 static inline uint32_t _picaConvertFilter(uint32_t param)
 {
 	switch(param)
-	{	
+	{
 		case GL_LINEAR_MIPMAP_LINEAR:
 		case GL_LINEAR: return GPU_LINEAR;
-		
+
 		case GL_NEAREST_MIPMAP_NEAREST:
 		case GL_NEAREST: return GPU_NEAREST;
 
@@ -127,7 +129,7 @@ static inline void *_textureDataAlloc(size_t size)
 		ret = vramAlloc(size);
 
 	if(!ret)
-		ret = linearAlloc(size); 
+		ret = linearAlloc(size);
 
 	return ret;
 }
@@ -164,7 +166,7 @@ static inline uint32_t _getMortonOffset(uint32_t x, uint32_t y)
 	return (i + offset);
 }
 
-static inline void _textureTile(TextureObject *texture, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, const void* data, uint8_t bpp, readFunc readPixel, writeFunc writePixel)
+static inline void _textureTile(TextureObject *texture, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, const void* data, uint8_t bpp /*, readFunc readPixel, writeFunc writePixel*/)
 {
 	uint32_t /*texel,*/ offset, output_y, coarse_y;
 
@@ -182,7 +184,7 @@ static inline void _textureTile(TextureObject *texture, GLint xoffset, GLint yof
 			_queueWaitAndClear();
 			GX_TextureCopy(texture->data, 0, tiled_output, 0, texture->width * texture->height * texture->bpp, 8);
 			_queueRun(false);
-			
+
 			_textureDataFree(texture);
 
 			texture->data = tiled_output;
@@ -190,52 +192,45 @@ static inline void _textureTile(TextureObject *texture, GLint xoffset, GLint yof
 		}
 	}
 
-    switch (_determineBPP(texture->format))
-
-    {
-
-        case 4:
-            for (int y = 0; y < height; y++)
-            {
-                output_y = texture->height - 1 - (y + yoffset);
-                coarse_y = output_y & ~7;
-                for (int x = 0; x < width; x++)
-                {
-                    offset = (_getMortonOffset(x + xoffset, output_y) + coarse_y * texture->width) * texture->bpp;
-                    ((uint32_t *)tiled_output)[offset] = ((uint32_t *)data)[x + (y * width)];
-                }
-            }
-            break;
-
-        case 2:
-
-            for (int y = 0; y < height; y++)
-            {
-                output_y = texture->height - 1 - (y + yoffset);
-                coarse_y = output_y & ~7;
-                for (int x = 0; x < width; x++)
-                {
-                    offset = (_getMortonOffset(x + xoffset, output_y) + coarse_y * texture->width) * texture->bpp;
-                    ((uint16_t *)tiled_output)[offset] = ((uint16_t *)data)[x + (y * width)];
-                }
-            }
-            break;
-
-        case 1:
-
-            for (int y = 0; y < height; y++)
-            {
-                output_y = texture->height - 1 - (y + yoffset);
-                coarse_y = output_y & ~7;
-                for (int x = 0; x < width; x++)
-                {
-                    offset = (_getMortonOffset(x + xoffset, output_y) + coarse_y * texture->width) * texture->bpp;
-                    ((uint8_t *)tiled_output)[offset] = ((uint8_t *)data)[x + (y * width)];
-                }
-            }
-            break;
-
-    }
+	switch (texture->bpp)
+	{
+		case 4:
+			for (int y = 0; y < height; y++)
+			{
+				output_y = texture->height - 1 - (y + yoffset);
+				coarse_y = output_y & ~7;
+				for (int x = 0; x < width; x++)
+				{
+					offset = _getMortonOffset(x + xoffset, output_y) + coarse_y * texture->width;
+					((uint32_t *)tiled_output)[offset] = ((uint32_t *)data)[x + (y * width)];
+				}
+			}
+			break;
+		case 2:
+			for (int y = 0; y < height; y++)
+			{
+				output_y = texture->height - 1 - (y + yoffset);
+				coarse_y = output_y & ~7;
+				for (int x = 0; x < width; x++)
+				{
+					offset = _getMortonOffset(x + xoffset, output_y) + coarse_y * texture->width;
+					((uint16_t *)tiled_output)[offset] = ((uint16_t *)data)[x + (y * width)];
+				}
+			}
+			break;
+		case 1:
+			for (int y = 0; y < height; y++)
+			{
+				output_y = texture->height - 1 - (y + yoffset);
+				coarse_y = output_y & ~7;
+				for (int x = 0; x < width; x++)
+				{
+					offset = _getMortonOffset(x + xoffset, output_y) + coarse_y * texture->width;
+					((uint8_t *)tiled_output)[offset] = ((uint8_t *)data)[x + (y * width)];
+				}
+			}
+			break;
+	}
 
 
 
@@ -262,7 +257,7 @@ static inline void _textureTile(TextureObject *texture, GLint xoffset, GLint yof
 		_queueWaitAndClear();
 		GX_TextureCopy(tiled_output, 0, texture->data, 0, texture->width * texture->height * texture->bpp, 8);
 		_queueRun(false);
-		
+
 		linearFree(tiled_output);
 	}
 }
@@ -319,11 +314,13 @@ void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei widt
 
 	uint8_t offset_bpp = 0;
 
+	/*
 	readFunc readPixel   = _determineReadFunction(format, type, &offset_bpp);
 	writeFunc writePixel = _determineWriteFunction(texture->format);
+	*/
 
-	if(readPixel && writePixel && data)
-		_textureTile(texture, 0, 0, width, height, data, offset_bpp, readPixel, writePixel);
+	if(/*readPixel && writePixel && */ data)
+		_textureTile(texture, 0, 0, width, height, data, offset_bpp /*, readPixel, writePixel*/);
 }
 
 void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* data)
@@ -338,11 +335,13 @@ void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, G
 
 	uint8_t offset_bpp = 0;
 
+	/*
 	readFunc readPixel   = _determineReadFunction(format, type, &offset_bpp);
 	writeFunc writePixel = _determineWriteFunction(texture->format);
+	*/
 
-	if(readPixel && writePixel)
-		_textureTile(texture, xoffset, yoffset, width, height, data, offset_bpp, readPixel, writePixel);
+	if(/*readPixel && writePixel*/ 1)
+		_textureTile(texture, xoffset, yoffset, width, height, data, offset_bpp /*, readPixel, writePixel*/);
 
 	pglState->textureChanged = GL_TRUE;
 	pglState->changes |= STATE_TEXTURE_CHANGE;
@@ -399,7 +398,7 @@ void glBindTexture(GLenum target, GLuint texture)
 
 		texObject->format = 0;
 		texObject->data   = NULL;
-		
+
 		hashTableInsert(&pglState->textureTable, texture, texObject);
 	}
 
@@ -450,8 +449,8 @@ void glDeleteTextures(GLsizei n, const GLuint *textures)
 	}
 }
 
-GLboolean glIsTexture( GLuint texture ) 
-{ 
+GLboolean glIsTexture( GLuint texture )
+{
 	if(texture == 0)
 		return GL_FALSE;
 
@@ -482,7 +481,7 @@ void glTexEnvfv( GLenum target, GLenum pname, const GLfloat *params )
 	uint8_t a = (uint8_t)(params[3] * 255);
 
 	texenv->color = r | (g << 8) | (b << 16) | (a << 24);
-	
+
 	pglState->changes |= STATE_TEXTURE_CHANGE;
 }
 
@@ -490,7 +489,7 @@ inline void glTexEnvi (GLenum target, GLenum pname, GLint param)
 {
 	if ((target != GL_TEXTURE_ENV) || (pname != GL_TEXTURE_ENV_MODE))
 		return;
-	
+
 	uint8_t texunit = pglState->texUnitActive;
 	TextureEnv *texenv  = &pglState->texenv[texunit];
 
