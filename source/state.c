@@ -54,8 +54,9 @@ void _stateDefault()
 	pglState->depthmapFar 	= 0.0f;
 	pglState->polygonOffset = 0.0f;
 
-	glViewport(0, 0, 400, 240);
-	glScissor(0, 0, 400, 240);
+	GLsizei width = gfxIsWide() ? 800 : 400;
+	glViewport(0, 0, width, 240);
+	glScissor(0, 0, width, 240);
 
 	glDisable(GL_CULL_FACE);
 	glCullFace(GL_BACK);

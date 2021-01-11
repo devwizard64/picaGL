@@ -3,7 +3,7 @@
 static GLint _GetScreenWidth()
 {
 	if(pglState->display == GFX_TOP)
-		return 400;
+		return gfxIsWide() ? 800 : 400;
 	else
 		return 320;
 }
@@ -19,7 +19,7 @@ void glClear(GLbitfield mask)
 	if(mask & GL_DEPTH_BUFFER_BIT)
 		write_mask |= GPU_WRITE_DEPTH;
 	
-	_picaViewport(0, 0, 240, 400);
+	_picaViewport(0, 0, 240, gfxIsWide() ? 800 : 400);
 	
 	_picaScissorTest(pglState->scissorState ? 0x3 : 0x0, pglState->scissorY, pglState->scissorX, pglState->scissorY + pglState->scissorHeight, pglState->scissorX + pglState->scissorWidth);
 
